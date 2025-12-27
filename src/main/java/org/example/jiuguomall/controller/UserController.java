@@ -6,6 +6,7 @@ import org.example.jiuguomall.service.UserService;
 import org.example.jiuguomall.vo.Result;
 import org.example.jiuguomall.vo.PageResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -32,6 +34,7 @@ public class UserController {
      */
     @PostMapping("/register")
     public Result<User> register(@Valid @RequestBody UserDTO userDTO) {
+        //测试参数在josn格式的body
         System.out.println("用户注册: " + userDTO.getUsername());
         try {
             User user = userService.register(userDTO);
@@ -45,18 +48,20 @@ public class UserController {
      * 用户登录
      */
     @PostMapping("/login")
-    public Result<User> login(
-            @RequestParam @NotBlank(message = "用户名不能为空") String username,
-            @RequestParam @NotBlank(message = "密码不能为空") String password) {
-        System.out.println("用户登录: " + username);
-        try {
-            User user = userService.login(username, password);
-            return Result.success(user);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+    public Result<Map<String, Object>> login(
+            @RequestParam String username,
+            @RequestParam String password) {
+
+        return Result.success(
+                userService.loginWithToken(username, password)
+        );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/test")
+    public String adminTest() {
+        return "ADMIN OK";
+    }
     /**
      * 根据ID获取用户
      */
