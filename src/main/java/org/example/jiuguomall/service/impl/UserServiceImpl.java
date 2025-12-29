@@ -3,6 +3,7 @@ package org.example.jiuguomall.service.impl;
 import org.example.jiuguomall.dto.UserDTO;
 import org.example.jiuguomall.entity.Role;
 import org.example.jiuguomall.entity.User;
+import org.example.jiuguomall.exception.BusinessException;
 import org.example.jiuguomall.mapper.RoleMapper;
 import org.example.jiuguomall.mapper.UserMapper;
 import org.example.jiuguomall.mapper.UserRoleMapper;
@@ -11,6 +12,7 @@ import org.example.jiuguomall.util.JwtUtil;
 import org.example.jiuguomall.vo.PageResult;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,9 +39,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User register(UserDTO userDTO) {
-        if (checkUsernameExists(userDTO.getUsername())) {
-            throw new RuntimeException("用户名已存在");
-        }
 
         User user = new User();
         BeanUtils.copyProperties(userDTO, user);
@@ -47,7 +46,12 @@ public class UserServiceImpl implements UserService {
         user.setStatus(User.STATUS_ENABLED);
         user.setDeleted(User.DELETED_NO);
 
-        userMapper.insert(user);
+        try {
+            userMapper.insert(user);
+        } catch (DuplicateKeyException e) {
+            // 精确捕获唯一索引异常
+            throw new BusinessException("用户名已存在");
+        }
 
         // 绑定 BUYER 角色
         Role buyerRole = roleMapper.selectByRoleCode("BUYER");

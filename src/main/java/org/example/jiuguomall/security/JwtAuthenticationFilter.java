@@ -6,8 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.jiuguomall.util.JwtUtil;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -26,6 +26,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        // 白名单：登录/注册接口不走 JWT 校验
+        String path = request.getServletPath();
+        if (path.startsWith("/users/login") || path.startsWith("/users/register")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 解析 token
         String token = resolveToken(request);
 
         if (StringUtils.hasText(token)) {
@@ -49,10 +57,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
+        // 放行请求
         filterChain.doFilter(request, response);
     }
 
-    // 从请求头中解析 token
+    /**
+     * 从请求头 Authorization 中解析 Bearer token
+     */
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {

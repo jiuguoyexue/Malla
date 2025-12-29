@@ -1,5 +1,6 @@
 package org.example.jiuguomall.controller;
 
+import org.example.jiuguomall.dto.LoginRequest;
 import org.example.jiuguomall.entity.User;
 import org.example.jiuguomall.dto.UserDTO;
 import org.example.jiuguomall.service.UserService;
@@ -22,7 +23,7 @@ import java.util.Map;
  * 用户管理控制器
  */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 @Validated
 public class UserController {
 
@@ -48,13 +49,16 @@ public class UserController {
      * 用户登录
      */
     @PostMapping("/login")
-    public Result<Map<String, Object>> login(
-            @RequestParam String username,
-            @RequestParam String password) {
+    public Result login(@RequestBody LoginRequest request) {
+        String username = request.getUsername();
+        String password = request.getPassword();
+        System.out.println("LoginRequest: " + request.getUsername() + ", " + request.getPassword());
+        {
 
-        return Result.success(
-                userService.loginWithToken(username, password)
-        );
+            return Result.success(
+                    userService.loginWithToken(username, password)
+            );
+        }
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -23,10 +23,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // REST API 不需要 CSRF
-                .cors(cors -> {}) // 跨域配置可选
+                .csrf(csrf -> csrf.disable()) // SPA 不需要 CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/login", "/api/users/register").permitAll()
+                        .requestMatchers("/users/login", "/users/register").permitAll() // 放行完整路径
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -37,9 +36,7 @@ public class SecurityConfig {
                         })
                 );
 
-        // 在 UsernamePasswordAuthenticationFilter 前添加 JWT Filter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
@@ -48,7 +45,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // 获取 AuthenticationManager
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
